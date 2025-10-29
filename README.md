@@ -69,7 +69,7 @@ uv pip install -r requirements.txt
 ```
 
 ```sh
-uv pip install -e . # Forcreating pakage for ease of access across the folders.
+uv pip install -e . # For creating pakage for ease of access across the folders.
 ```
 
 4. Set up environment variables:
