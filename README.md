@@ -38,14 +38,6 @@ Key components:
 - Dash Dashboard: reads from DB and renders interactive charts + controls.
 - Web Browser: end-user UI for visualization and exports.
 
-Image assets referenced in this README are expected in the repository under Images/:
-
-- Images/exchange-tab.png (dashboard overview)
-- Images/dashboard1.png (currency comparison view)
-- Images/dashboardpart2.png (detailed chart / controls)
-
-Place high-resolution screenshots (1200×700 recommended) in Images/ and keep filenames exact to ensure they render correctly in this README.
-
 ## Prerequisites
 
 - Python 3.11
