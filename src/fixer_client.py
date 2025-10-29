@@ -4,9 +4,9 @@ from typing import Dict, List, Optional
 
 from utils.config import Config
 
-
+# Client for interacting with the Fixer.io API
 class FixerClient:
-    """Client for interacting with the Fixer.io API"""
+    
 
     def __init__(self, api_key: str):
         """Initialize with API key"""
@@ -14,7 +14,6 @@ class FixerClient:
         self.base_url = "http://data.fixer.io/api"
 
     def _make_request(self, endpoint: str, params: Dict = None) -> Dict:
-        """Make API request with error handling"""
         try:
             url = f"{self.base_url}/{endpoint}"
             params = params or {}
@@ -35,14 +34,7 @@ class FixerClient:
             raise Exception(f"Request failed: {str(e)}")
 
     def fetch_fx_rates(self, target_currencies: List[str] = None, date: str = None) -> Dict:
-        """
-        Fetch FX rates for a specific date or latest
-        Args:
-            target_currencies: Optional list of currency codes to fetch
-            date: Optional date in YYYY-MM-DD format
-        Returns:
-            Dict containing rates and metadata
-        """
+
         # Use timeseries endpoint for historical data
         if date:
             endpoint = date
@@ -73,7 +65,6 @@ class FixerClient:
             return None
 
     def get_available_currencies(self) -> List[str]:
-        """Get list of available currencies from latest rates"""
         data = self.fetch_fx_rates()
         return sorted(list(data["rates"].keys()))
 
@@ -87,28 +78,13 @@ class FixerClient:
     def get_historical_rates(
         self, date: str, target_currencies: List[str] = None
     ) -> Dict:
-        """
-        Get historical rates for a specific date
-        Args:
-            date: Date in YYYY-MM-DD format
-            target_currencies: Optional list of currency codes to fetch
-        Returns:
-            Dict containing historical rates
-        """
+        
         if not date:
             raise ValueError("Date parameter is required for historical rates")
         return self.fetch_fx_rates(target_currencies, date)
 
     def get_historical_timeseries(self, start_date: str, end_date: str, target_currencies: List[str]) -> Dict:
-        """
-        Fetch historical timeseries data for given date range
-        Args:
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format
-            target_currencies: List of currency codes to fetch
-        Returns:
-            Dict containing historical rates timeseries
-        """
+
         endpoint = "timeseries"
         params = {
             "access_key": self.api_key,
@@ -128,7 +104,6 @@ class FixerClient:
 
     def get_historical_data(self, start_date: datetime, end_date: datetime, 
                           target_currencies: List[str]) -> List[Dict]:
-        """Fetch historical data by making individual requests for each date"""
         historical_data = []
         current_date = start_date
 

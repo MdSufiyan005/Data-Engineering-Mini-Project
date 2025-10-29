@@ -7,7 +7,6 @@ from src.database import save_fx_rate
 from utils.config import Config
 
 def update_fx_rates():
-    """Fetch and store latest FX rates"""
     client = FixerClient(Config.API_KEY)
     
     try:
@@ -34,7 +33,6 @@ def update_fx_rates():
         print(f"Error updating FX rates: {e}")
 
 def start_scheduler():
-    """Start the scheduler for automated updates"""
     # Schedule updates based on configured interval
     schedule.every(Config.UPDATE_INTERVAL).minutes.do(update_fx_rates)
     

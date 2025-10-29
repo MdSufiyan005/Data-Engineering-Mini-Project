@@ -12,7 +12,6 @@ from utils.config import Config
 print("Starting dashboard...")
 app = dash.Dash(__name__)
 
-# Enhanced layout with multiple visualization options
 app.layout = html.Div([
     html.H1('FX Rate Dashboard', style={'textAlign': 'center'}),
     
