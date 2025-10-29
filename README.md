@@ -11,12 +11,8 @@ A real-time foreign exchange rate monitoring dashboard that fetches data from Fi
   - USD - United States Dollar (USD)
   - EUR - Euro (EUR)
   - JPY - Japanese Yen (JPY)
-- Interactive, responsive visualizations (time-series, heatmaps, pair comparison)
 - Historical rate comparison with selectable date ranges
-- Multi-pair analysis and percentage-change indicators
-- Automated periodic updates via a scheduler (configurable interval)
-- Persistent storage in PostgreSQL for audit / historical queries
-- Environment-driven configuration for easy deployment and testing
+- Storage in PostgreSQL for historical queries
 
 ## Architecture
 
@@ -32,11 +28,15 @@ graph TD
 
 Key components:
 
-- Fixer.io API: authoritative source for FX rates.
-- Scheduler Service: polls the API at UPDATE_INTERVAL and writes normalized rows to the DB.
-- PostgreSQL DB: stores timestamped rate snapshots and aggregated metrics.
-- Dash Dashboard: reads from DB and renders interactive charts + controls.
-- Web Browser: end-user UI for visualization and exports.
+- Fixer.io API: This is the main source that gives the latest foreign exchange (FX) rates.
+
+- Scheduler Service: It regularly calls the Fixer.io API after a fixed time (called the update interval) and saves the clean, organized data into the database.
+
+- PostgreSQL Database: This stores the currency rates along with their timestamps and calculates summary data (like averages or trends).
+
+- Dash Dashboard: This pulls data from the database and shows it as interactive charts, graphs, and filters.
+
+- Web Browser: This is what the end user opens to view the dashboard, explore data, and      download reports.
 
 ## Prerequisites
 
