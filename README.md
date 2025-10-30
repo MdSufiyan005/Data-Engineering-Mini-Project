@@ -78,7 +78,7 @@ This metric captures how “stable” or “risky” a currency has been over a 
 ## Installation
 
 ```bash
-git clone https://github.com/MdSufiyan005/CheatWall-Website.git
+git clone https://github.com/MdSufiyan005/Data-Engineering-Mini-Project.git
 uv venv
 .venv\Scripts\activate  # Windows
 uv pip install -r requirements.txt
@@ -130,7 +130,8 @@ Access the dashboard at:
 ├── utils/
 │   ├── clean_data.py      # Data cleaning utilities
 │   ├── config.py          # Configuration management
-│   └── schedular.py       # Automated update scheduler
+│   ├── schedular.py       # Automated update scheduler
+|   ├── dashboard_ui.py    # UI for the Dashboard
 └── requirements.txt       # Dependencies
 ```
 
