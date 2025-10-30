@@ -1,22 +1,26 @@
-# FX Rate Dashboard
+
 
 A real-time foreign exchange rate monitoring dashboard that fetches data from Fixer.io API and visualizes currency exchange rates.
 
-![Dashboard Preview](/Images/exchange-tab.png)
+# FX Rate Dashboard
+
+![Dashboard Preview](/Images/dashboard.png)
 
 ## Features
 
-- Real-time FX rate monitoring for a core set of currencies:
-  - GBP - British Pound Sterling (GBP)
-  - USD - United States Dollar (USD)
-  - EUR - Euro (EUR)
-  - JPY - Japanese Yen (JPY)
-- Historical rate comparison with selectable date ranges
-- Storage in PostgreSQL for historical queries
+* Real-time FX rate monitoring for core currencies:
+
+  * GBP - British Pound Sterling
+  * USD - United States Dollar
+  * EUR - Euro
+  * JPY - Japanese Yen
+* Historical rate comparison with selectable date ranges
+* Percentage change and volatility insights
+* PostgreSQL-based historical storage for trend analysis
+
+---
 
 ## Architecture
-
-The service follows a simple, decoupled architecture:
 
 ```mermaid
 graph TD
@@ -26,54 +30,62 @@ graph TD
     D -->|Display| E[Web Browser]
 ```
 
-Key components:
+**Key components:**
 
-- Fixer.io API: This is the main source that gives the latest foreign exchange (FX) rates.
+* **Fixer.io API** – Provides the latest FX rates.
+* **Scheduler Service** – Periodically fetches and cleans the data.
+* **PostgreSQL Database** – Stores timestamped FX rates and enables historical analysis.
+* **Dash Dashboard** – Displays interactive charts, trends, and computed metrics.
+* **Web Browser** – Used to explore and interact with the dashboard.
 
-- Scheduler Service: It regularly calls the Fixer.io API after a fixed time (called the update interval) and saves the clean, organized data into the database.
+---
 
-- PostgreSQL Database: This stores the currency rates along with their timestamps and calculates summary data (like averages or trends).
+## Visualization Logic
 
-- Dash Dashboard: This pulls data from the database and shows it as interactive charts, graphs, and filters.
+### 1. **Percentage Change Calculation**
 
-- Web Browser: This is what the end user opens to view the dashboard, explore data, and      download reports.
+To measure how much a currency moved relative to its previous value:
+[
+\text{Percentage Change} = \frac{\text{Current Rate} - \text{Previous Rate}}{\text{Previous Rate}} \times 100
+]
+
+* **Positive values** indicate appreciation.
+* **Negative values** indicate depreciation.
+* Used for short-term performance comparison between currencies.
+
+These changes are visualized using **bar charts** or **colored markers** on time-series plots to quickly identify gainers or losers.
+
+### 2. **Volatility Analysis**
+
+Volatility is computed as the **rolling standard deviation** of exchange rate returns:
+[
+\text{Volatility} = \sqrt{\frac{1}{N} \sum (r_i - \bar{r})^2}
+]
+where (r_i) is the rate of return and (N) is the window size.
+This metric captures how “stable” or “risky” a currency has been over a chosen time frame.
+
+---
 
 ## Prerequisites
 
-- Python 3.11
-- PostgreSQL database
-- Fixer.io API key
-- Required Python packages (see `requirements.txt`)
+* Python 3.11
+* PostgreSQL
+* Fixer.io API key
+* Dependencies in `requirements.txt`
+
+---
 
 ## Installation
 
-1. Clone the repository:
-
-```sh
-git clone <repository-url>
-cd fx-rate-dashboard
-```
-
-2. Create and activate a virtual environment:
-
-```sh
-uv init .
+```bash
+git clone https://github.com/MdSufiyan005/CheatWall-Website.git
 uv venv
-.venv\Scripts\activate  # On Windows
-```
-
-3. Install dependencies:
-
-```sh
+.venv\Scripts\activate  # Windows
 uv pip install -r requirements.txt
+uv pip install -e .
 ```
 
-```sh
-uv pip install -e . # For creating pakage for ease of access across the folders.
-```
-
-4. Set up environment variables:
-   Create a `.env` file with the following configuration:
+Create a `.env` file:
 
 ```env
 FIXER_API_KEY=your_api_key
@@ -87,33 +99,25 @@ DASH_PORT=8050
 DASH_DEBUG=True
 ```
 
+---
+
 ## Usage
 
-1. Initialize the database:
-
-```sh
+```bash
 uv run main.py
 ```
 
-2. Access the dashboard:
-   Open your browser and navigate to `http://localhost:8050`
+Access the dashboard at:
+`http://localhost:8050`
 
-## Dashboard Features
+---
 
-### Currency Comparison
+## Dashboard Previews
 
-![Currency Comparison](Images/dashboard1.png)
-![Currency Comparison](Images/dashboardpart2.png)
+![Currency Comparison](Images/exchange.png)
+![Extended View](Images/perce_change.png)
 
-- Compare multiple currency pairs
-- View historical exchange rates
-- Analyze percentage changes
-
-### Data Visualization
-
-- Interactive time series plots
-- Real-time rate updates
-- Customizable date ranges
+---
 
 ## Project Structure
 
@@ -127,14 +131,6 @@ uv run main.py
 │   ├── clean_data.py      # Data cleaning utilities
 │   ├── config.py          # Configuration management
 │   └── schedular.py       # Automated update scheduler
-└── requirements.txt       # Project dependencies
+└── requirements.txt       # Dependencies
 ```
 
-## Configuration
-
-Key configuration options in `config.py`:
-
-- API settings
-- Database connection
-- Update intervals
-- Dashboard parameters

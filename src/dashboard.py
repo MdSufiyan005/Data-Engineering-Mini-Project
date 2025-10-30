@@ -1,162 +1,112 @@
+# dashboard_logic.py
 import dash
-from dash import dcc, html
 from dash.dependencies import Input, Output
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pandas as pd
-from datetime import datetime, timedelta
+import numpy as np
+import logging
+from datetime import datetime
 from src.database import query_fx_rates
 from utils.config import Config
+from utils.dashboard_ui import serve_layout, COLORS
 
-print("Starting dashboard...")
+import plotly.graph_objects as go
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize app
 app = dash.Dash(__name__)
+app.title = "FX Rate Dashboard"
+app.layout = serve_layout()
 
-app.layout = html.Div([
-    html.H1('FX Rate Dashboard', style={'textAlign': 'center'}),
-    
-    html.Div([
-        html.Div([
-            html.Label('Primary Currency:'),
-            dcc.Dropdown(
-                id='primary-currency',
-                options=[
-                    {'label': 'USD', 'value': 'USD'},
-                    {'label': 'GBP', 'value': 'GBP'},
-                    {'label': 'JPY', 'value': 'JPY'},
-                    {'label': 'EUR', 'value': 'EUR'}
-                ],
-                value='USD'
-            ),
-            
-            html.Label('Compare with:'),
-            dcc.Dropdown(
-                id='secondary-currency',
-                options=[
-                    {'label': 'GBP', 'value': 'GBP'},
-                    {'label': 'JPY', 'value': 'JPY'},
-                    {'label': 'EUR', 'value': 'EUR'},
-                    {'label': 'USD', 'value': 'USD'}
-                ],
-                value='EUR'
-            ),
-        ], style={'width': '48%', 'display': 'inline-block'}),
-
-        html.Div([
-            html.Label('Time Range:'),
-            dcc.DatePickerRange(
-                id='date-range',
-                start_date=(datetime.now() - timedelta(days=30)).date(),
-                end_date=datetime.now().date()
-            ),
-        ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-    ]),
-    
-    html.Div([
-        dcc.Loading(
-            id="loading-1",
-            type="default",
-            children=[
-                html.Div([
-                    dcc.Graph(id='fx-rate-graph'),
-                    dcc.Graph(id='percentage-change-graph')
-                ])
-            ],
-        ),
-    ]),
-    
-    html.Div(id='error-message', style={'color': 'red'})
-])
+def _empty_figure(title="No data"):
+    return {
+        "data": [],
+        "layout": {
+            "title": {"text": title, "font": {"color": COLORS['text'], "size": 18}},
+            "template": "plotly_dark",
+            "paper_bgcolor": COLORS['bg_card'],
+            "plot_bgcolor": COLORS['bg_card'],
+            "font": {"color": COLORS['text']},
+            "height": 400
+        }
+    }
 
 @app.callback(
     [Output('fx-rate-graph', 'figure'),
-     Output('percentage-change-graph', 'figure')],
+     Output('percentage-change-graph', 'figure'),
+     Output('error-message', 'children')],
     [Input('primary-currency', 'value'),
      Input('secondary-currency', 'value'),
      Input('date-range', 'start_date'),
      Input('date-range', 'end_date')]
 )
 def update_graphs(primary_curr, secondary_curr, start_date, end_date):
-    # Query data for both currencies
-    primary_rates = query_fx_rates(primary_curr)
-    secondary_rates = query_fx_rates(secondary_curr)
-    
-    # Debug print
-    print(f"Primary rates: {len(primary_rates) if primary_rates else 0} records")
-    print(f"Secondary rates: {len(secondary_rates) if secondary_rates else 0} records")
-    
-    if primary_rates and secondary_rates:
-        # Create DataFrames for both currencies
-        df_primary = pd.DataFrame(primary_rates, columns=['rate', 'timestamp'])
-        df_secondary = pd.DataFrame(secondary_rates, columns=['rate', 'timestamp'])
-        
-        # Convert timestamps
-        df_primary['timestamp'] = pd.to_datetime(df_primary['timestamp'])
-        df_secondary['timestamp'] = pd.to_datetime(df_secondary['timestamp'])
-        
-        # Filter by date range
-        start_date = pd.to_datetime(start_date)
-        end_date = pd.to_datetime(end_date)
-        mask_primary = (df_primary['timestamp'].dt.date >= start_date.date()) & \
-                      (df_primary['timestamp'].dt.date <= end_date.date())
-        mask_secondary = (df_secondary['timestamp'].dt.date >= start_date.date()) & \
-                        (df_secondary['timestamp'].dt.date <= end_date.date())
-        
-        df_primary = df_primary.loc[mask_primary]
-        df_secondary = df_secondary.loc[mask_secondary]
-        
-        # Calculate percentage changes
-        df_primary['pct_change'] = df_primary['rate'].pct_change() * 100
-        df_secondary['pct_change'] = df_secondary['rate'].pct_change() * 100
-        
-        # Create exchange rate comparison figure
-        fig1 = make_subplots(specs=[[{"secondary_y": True}]])
-        
-        fig1.add_trace(
-            go.Scatter(x=df_primary['timestamp'], y=df_primary['rate'],
-                      name=f'{primary_curr}/EUR', line=dict(color='blue')),
-            secondary_y=False
-        )
-        
-        fig1.add_trace(
-            go.Scatter(x=df_secondary['timestamp'], y=df_secondary['rate'],
-                      name=f'{secondary_curr}/EUR', line=dict(color='red')),
-            secondary_y=True
-        )
-        
+    try:
+        logger.info("Update requested: %s vs %s (%s -> %s)", primary_curr, secondary_curr, start_date, end_date)
+
+        if not primary_curr or not secondary_curr:
+            return _empty_figure("Select currencies"), _empty_figure("Select currencies"), "Please select both currencies."
+
+        primary_rates = query_fx_rates(primary_curr) or []
+        secondary_rates = query_fx_rates(secondary_curr) or []
+
+        if len(primary_rates) == 0 or len(secondary_rates) == 0:
+            return _empty_figure("No data"), _empty_figure("No data"), "No rate history found."
+
+        df_p = pd.DataFrame(primary_rates, columns=['rate', 'timestamp'])
+        df_s = pd.DataFrame(secondary_rates, columns=['rate', 'timestamp'])
+        df_p['timestamp'] = pd.to_datetime(df_p['timestamp'])
+        df_s['timestamp'] = pd.to_datetime(df_s['timestamp'])
+        df_p = df_p.sort_values('timestamp')
+        df_s = df_s.sort_values('timestamp')
+
+        # Merge on timestamp
+        df = pd.merge_asof(df_p, df_s, on='timestamp', direction='nearest', tolerance=pd.Timedelta('1D'),
+                           suffixes=('_p', '_s')).dropna()
+
+        if df.empty:
+            return _empty_figure("No overlapping data"), _empty_figure("No data"), "No overlapping timestamps."
+
+        df['direct_rate'] = df['rate_p'] / df['rate_s']
+        df['direct_rate_ma7'] = df['direct_rate'].rolling(window=7, min_periods=1).mean()
+        df['pct_direct'] = df['direct_rate'].pct_change() * 100
+        df['volatility'] = df['pct_direct'].rolling(window=7, min_periods=1).std()
+
+        # --- Plot 1: Exchange Rate ---
+        fig1 = go.Figure([
+            go.Scatter(x=df['timestamp'], y=df['direct_rate'], mode='lines+markers',
+                       name=f'{primary_curr}/{secondary_curr}',
+                       line=dict(color=COLORS['primary'], width=3))
+        ])
+        fig1.add_trace(go.Scatter(x=df['timestamp'], y=df['direct_rate_ma7'],
+                                  mode='lines', name='7-day MA',
+                                  line=dict(color=COLORS['warning'], dash='dash')))
         fig1.update_layout(
-            title=f'Exchange Rate Comparison',
-            xaxis_title='Date',
-            yaxis_title=f'{primary_curr}/EUR Rate',
-            yaxis2_title=f'{secondary_curr}/EUR Rate'
+            title=f'📈 Exchange Rate: {primary_curr}/{secondary_curr}',
+            paper_bgcolor=COLORS['bg_card'],
+            plot_bgcolor=COLORS['bg_card'],
+            font=dict(color=COLORS['text'])
         )
-        
-        # Create percentage change figure
-        fig2 = go.Figure()
-        
-        fig2.add_trace(
-            go.Scatter(x=df_primary['timestamp'], y=df_primary['pct_change'],
-                      name=f'{primary_curr} % Change', line=dict(color='blue'))
-        )
-        
-        fig2.add_trace(
-            go.Scatter(x=df_secondary['timestamp'], y=df_secondary['pct_change'],
-                      name=f'{secondary_curr} % Change', line=dict(color='red'))
-        )
-        
+
+        # --- Plot 2: % Change ---
+        fig2 = go.Figure([
+            go.Bar(x=df['timestamp'], y=df['pct_direct'], name='% Change', marker_color=COLORS['secondary']),
+            go.Scatter(x=df['timestamp'], y=df['volatility'], name='Volatility (7d)', yaxis='y2',
+                       line=dict(color=COLORS['danger'], width=3))
+        ])
         fig2.update_layout(
-            title='Daily Percentage Changes',
-            xaxis_title='Date',
-            yaxis_title='Percentage Change (%)'
+            title='📊 Daily % Change and Volatility',
+            paper_bgcolor=COLORS['bg_card'],
+            plot_bgcolor=COLORS['bg_card'],
+            font=dict(color=COLORS['text']),
+            yaxis2=dict(overlaying='y', side='right', showgrid=False)
         )
-        
-        return fig1, fig2
-    
-    return {}, {}
+
+        return fig1, fig2, ""
+    except Exception as e:
+        logger.exception("Error updating graphs")
+        return _empty_figure("Error"), _empty_figure("Error"), f"Error: {str(e)}"
 
 def run_dashboard():
-    """Run the dashboard server"""
-    app.run(
-        debug=Config.DASH_DEBUG,
-        port=Config.DASH_PORT
-    )
+    app.run(debug=Config.DASH_DEBUG, port=Config.DASH_PORT)

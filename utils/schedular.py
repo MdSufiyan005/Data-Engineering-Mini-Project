@@ -3,7 +3,6 @@ import time
 from datetime import datetime, timedelta
 from src.fixer_client import FixerClient
 from src.database import save_fx_rate
-# from .clean_data import clean_fx_data, validate_fx_data
 from utils.config import Config
 
 def update_fx_rates():
