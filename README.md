@@ -45,9 +45,9 @@ graph TD
 ### 1. **Percentage Change Calculation**
 
 To measure how much a currency moved relative to its previous value:
-[
-\text{Percentage Change} = \frac{\text{Current Rate} - \text{Previous Rate}}{\text{Previous Rate}} \times 100
-]
+
+$$\text{Percentage Change} = \frac{\text{Current Rate} - \text{Previous Rate}}{\text{Previous Rate}} \times 100$$
+
 
 * **Positive values** indicate appreciation.
 * **Negative values** indicate depreciation.
@@ -58,9 +58,9 @@ These changes are visualized using **bar charts** or **colored markers** on time
 ### 2. **Volatility Analysis**
 
 Volatility is computed as the **rolling standard deviation** of exchange rate returns:
-[
-\text{Volatility} = \sqrt{\frac{1}{N} \sum (r_i - \bar{r})^2}
-]
+
+$$\text{Volatility} = \sqrt{\frac{1}{N} \sum (r_i - \bar{r})^2}$$
+
 where (r_i) is the rate of return and (N) is the window size.
 This metric captures how “stable” or “risky” a currency has been over a chosen time frame.
 
@@ -128,7 +128,6 @@ Access the dashboard at:
 │   ├── database.py        # Database operations
 │   └── fixer_client.py    # API client for Fixer.io
 ├── utils/
-│   ├── clean_data.py      # Data cleaning utilities
 │   ├── config.py          # Configuration management
 │   ├── schedular.py       # Automated update scheduler
 |   ├── dashboard_ui.py    # UI for the Dashboard

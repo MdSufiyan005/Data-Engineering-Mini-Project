@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import requests
-from typing import Dict, List, Optional
-
+from typing import Dict, List
 from utils.config import Config
 
 # Client for interacting with the Fixer.io API
@@ -31,76 +30,6 @@ class FixerClient:
             return data
         except requests.exceptions.RequestException as e:
             raise Exception(f"Request failed: {str(e)}")
-
-    # def fetch_fx_rates(self, target_currencies: List[str] = None, date: str = None) -> Dict:
-
-    #     # Use timeseries endpoint for historical data
-    #     if date:
-    #         endpoint = date
-    #     else:
-    #         endpoint = "latest"
-
-    #     params = {
-    #         "access_key": self.api_key,
-    #     }
-        
-    #     if target_currencies:
-    #         params["symbols"] = ",".join(target_currencies)
-
-    #     try:
-    #         data = self._make_request(endpoint, params)
-            
-    #         if not data.get("success"):
-    #             raise Exception(f"API Error: {data.get('error', {}).get('info')}")
-
-    #         return {
-    #             "base_currency": data["base"],
-    #             "timestamp": datetime.fromtimestamp(data["timestamp"]).isoformat(),
-    #             "date": data["date"],
-    #             "rates": data["rates"],
-    #         }
-    #     except Exception as e:
-    #         print(f"Error fetching rates: {str(e)}")
-    #         return None
-
-    # def get_available_currencies(self) -> List[str]:
-    #     data = self.fetch_fx_rates()
-    #     return sorted(list(data["rates"].keys()))
-
-    # def get_rate_for_currency(
-    #     self, target_currency: str, date: str = None
-    # ) -> Optional[float]:
-    #     """Get specific exchange rate for a currency pair"""
-    #     data = self.fetch_fx_rates([target_currency.upper()], date)
-    #     return data["rates"].get(target_currency.upper())
-
-    # def get_historical_rates(
-    #     self, date: str, target_currencies: List[str] = None
-    # ) -> Dict:
-        
-    #     if not date:
-    #         raise ValueError("Date parameter is required for historical rates")
-    #     return self.fetch_fx_rates(target_currencies, date)
-
-    # def get_historical_timeseries(self, start_date: str, end_date: str, target_currencies: List[str]) -> Dict:
-
-    #     endpoint = "timeseries"
-    #     params = {
-    #         "access_key": self.api_key,
-    #         "start_date": start_date,
-    #         "end_date": end_date,
-    #         "symbols": ",".join(target_currencies)
-    #     }
-
-    #     try:
-    #         data = self._make_request(endpoint, params)
-    #         if not data.get("success"):
-    #             raise Exception(f"API Error: {data.get('error', {}).get('info')}")
-    #         return data
-    #     except Exception as e:
-    #         print(f"Error fetching historical timeseries: {str(e)}")
-    #         return None
-
     def get_historical_data(self, start_date: datetime, end_date: datetime, 
                           target_currencies: List[str]) -> List[Dict]:
         historical_data = []
